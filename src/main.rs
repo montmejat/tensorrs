@@ -1,4 +1,4 @@
 fn main() {
     println!("Hello, world!");
-    tensorrs::logger::create_logger();
+    let _logger = tensorrs::logger::create_logger();
 }
