@@ -5,7 +5,7 @@
 
 #include "NvInfer.h"
 
-class Logger : public nvinfer1::ILogger
+class LoggerTRT : public nvinfer1::ILogger
 {
     void log(Severity severity, const char *msg) noexcept override
     {
@@ -14,4 +14,4 @@ class Logger : public nvinfer1::ILogger
     }
 };
 
-std::unique_ptr<Logger> create_logger();
+std::unique_ptr<LoggerTRT> create_logger();
