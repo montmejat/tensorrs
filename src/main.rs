@@ -1,4 +1,6 @@
 fn main() {
-    println!("Hello, world!");
-    let _logger = tensorrs::Logger::new();
+    println!("Hello, TensorRT!");
+
+    let logger = tensorrs::Logger::new();
+    let _builder = tensorrs::Builder::new(logger);
 }
