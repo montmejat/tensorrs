@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <memory>
-
 #include "NvInfer.h"
 
 class LoggerTRT : public nvinfer1::ILogger
