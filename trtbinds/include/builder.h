@@ -5,9 +5,8 @@
 #include "../include/logger.h"
 #include "NvInfer.h"
 
-struct BuilderTRT
-{
-    nvinfer1::IBuilder* builder;
-};
+using BuilderTRT = nvinfer1::IBuilder;
+using NetworkDefinitionTRT = nvinfer1::INetworkDefinition;
 
 std::unique_ptr<BuilderTRT> create_builder(std::unique_ptr<LoggerTRT> logger);
+std::unique_ptr<NetworkDefinitionTRT> create_network(const std::unique_ptr<BuilderTRT> &builder);
