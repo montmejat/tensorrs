@@ -12,7 +12,7 @@ pub mod trt_bindings {
         type BuilderTRT;
         type NetworkDefinitionTRT;
         fn create_builder(logger: UniquePtr<LoggerTRT>) -> UniquePtr<BuilderTRT>;
-        fn create_network(builder: &UniquePtr<BuilderTRT>) -> UniquePtr<NetworkDefinitionTRT>;
+        fn create_network(builder: &UniquePtr<BuilderTRT>, explicit_batch: bool) -> UniquePtr<NetworkDefinitionTRT>;
     }
 }
 
@@ -43,9 +43,14 @@ impl Builder {
         }
     }
 
-    pub fn create_network(&self) -> NetworkDefinition {
-        NetworkDefinition {
-            network: trt_bindings::create_network(&self.builder),
+    pub fn create_network(&self, explicit_batch: Option<bool>) -> NetworkDefinition {
+        match explicit_batch {
+            Some(value) => NetworkDefinition {
+                network: trt_bindings::create_network(&self.builder, value),
+            },
+            None => NetworkDefinition {
+                network: trt_bindings::create_network(&self.builder, true),
+            },
         }
     }
 }
