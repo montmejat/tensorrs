@@ -1,7 +1,7 @@
 #include "../include/builder.h"
 #include <iostream>
 
-std::unique_ptr<BuilderTRT> create_builder(std::unique_ptr<LoggerTRT> logger)
+std::unique_ptr<BuilderTRT> create_builder(const std::unique_ptr<LoggerTRT> &logger)
 {
     auto builder = nvinfer1::createInferBuilder(*logger);
     return std::unique_ptr<BuilderTRT>(builder);

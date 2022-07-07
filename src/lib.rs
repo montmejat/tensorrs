@@ -1,18 +1,28 @@
-use cxx::UniquePtr;
+use cxx::{UniquePtr, SharedPtr};
 
 #[cxx::bridge]
 pub mod trt_bindings {
     unsafe extern "C++" {
         include!("tensorrs/trtbinds/include/builder.h");
         include!("tensorrs/trtbinds/include/logger.h");
+        include!("tensorrs/trtbinds/include/parser.h");
 
         type LoggerTRT;
         fn create_logger() -> UniquePtr<LoggerTRT>;
 
         type BuilderTRT;
         type NetworkDefinitionTRT;
-        fn create_builder(logger: UniquePtr<LoggerTRT>) -> UniquePtr<BuilderTRT>;
-        fn create_network(builder: &UniquePtr<BuilderTRT>, explicit_batch: bool) -> UniquePtr<NetworkDefinitionTRT>;
+        fn create_builder(logger: &UniquePtr<LoggerTRT>) -> UniquePtr<BuilderTRT>;
+        fn create_network(
+            builder: &UniquePtr<BuilderTRT>,
+            explicit_batch: bool,
+        ) -> UniquePtr<NetworkDefinitionTRT>;
+
+        type ONNXParserTRT;
+        fn create_parser(
+            network: UniquePtr<NetworkDefinitionTRT>,
+            logger: &UniquePtr<LoggerTRT>,
+        ) -> UniquePtr<ONNXParserTRT>;
     }
 }
 
@@ -37,9 +47,9 @@ pub struct NetworkDefinition {
 }
 
 impl Builder {
-    pub fn new(log: Logger) -> Self {
+    pub fn new(log: &Logger) -> Self {
         Builder {
-            builder: trt_bindings::create_builder(log.logger),
+            builder: trt_bindings::create_builder(&log.logger),
         }
     }
 
@@ -51,6 +61,18 @@ impl Builder {
             None => NetworkDefinition {
                 network: trt_bindings::create_network(&self.builder, true),
             },
+        }
+    }
+}
+
+pub struct ONNXParser {
+    parser: UniquePtr<trt_bindings::ONNXParserTRT>,
+}
+
+impl ONNXParser {
+    pub fn new(network: NetworkDefinition, logger: &Logger) -> Self {
+        ONNXParser {
+            parser: trt_bindings::create_parser(network.network, &logger.logger),
         }
     }
 }
