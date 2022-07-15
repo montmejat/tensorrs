@@ -8,5 +8,12 @@ std::unique_ptr<ONNXParserTRT> create_parser(const std::unique_ptr<NetworkDefini
 
 bool parse(const std::unique_ptr<ONNXParserTRT> &parser, rust::Str onnxModelFile, int verbosity)
 {
-    return parser->parseFromFile(onnxModelFile.data(), verbosity);
+    auto parsedSuccessfully = parser->parseFromFile(onnxModelFile.data(), verbosity);
+
+    for (int32_t i = 0; i < parser->getNbErrors(); ++i)
+    {
+        std::cout << parser->getError(i)->desc() << std::endl;
+    }
+
+    return parsedSuccessfully;
 }
