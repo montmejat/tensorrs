@@ -5,25 +5,50 @@ pub mod trt_bindings {
     unsafe extern "C++" {
         include!("tensorrs/trtbinds/include/builder.h");
         include!("tensorrs/trtbinds/include/logger.h");
+        include!("tensorrs/trtbinds/include/parser.h");
 
         type LoggerTRT;
         fn create_logger() -> UniquePtr<LoggerTRT>;
 
         type BuilderTRT;
         type NetworkDefinitionTRT;
-        fn create_builder(logger: UniquePtr<LoggerTRT>) -> UniquePtr<BuilderTRT>;
-        fn create_network(builder: &UniquePtr<BuilderTRT>, explicit_batch: bool) -> UniquePtr<NetworkDefinitionTRT>;
+        fn create_builder(logger: &UniquePtr<LoggerTRT>) -> UniquePtr<BuilderTRT>;
+        fn create_network(
+            builder: &UniquePtr<BuilderTRT>,
+            explicit_batch: bool,
+        ) -> UniquePtr<NetworkDefinitionTRT>;
+
+        type ONNXParserTRT;
+        fn create_parser(
+            network: &UniquePtr<NetworkDefinitionTRT>,
+            logger: &UniquePtr<LoggerTRT>,
+        ) -> UniquePtr<ONNXParserTRT>;
+        fn parse(parser: &UniquePtr<ONNXParserTRT>, onnx_model: &str, verbosity: i32) -> bool;
     }
 }
 
-pub struct Logger {
-    logger: UniquePtr<trt_bindings::LoggerTRT>,
-}
+pub mod logging {
+    use cxx::UniquePtr;
+    use super::trt_bindings;
 
-impl Logger {
-    pub fn new() -> Self {
-        Logger {
-            logger: trt_bindings::create_logger(),
+    pub struct Logger {
+        pub logger: UniquePtr<trt_bindings::LoggerTRT>,
+    }
+
+    #[derive(Copy, Clone)]
+    pub enum Sererity {
+        InternalError = 0,
+        Error = 1,
+        Warning = 2,
+        Info = 3,
+        Verbose = 4,
+    }
+
+    impl Logger {
+        pub fn new() -> Self {
+            Logger {
+                logger: trt_bindings::create_logger(),
+            }
         }
     }
 }
@@ -37,9 +62,9 @@ pub struct NetworkDefinition {
 }
 
 impl Builder {
-    pub fn new(log: Logger) -> Self {
+    pub fn new(logger: &logging::Logger) -> Self {
         Builder {
-            builder: trt_bindings::create_builder(log.logger),
+            builder: trt_bindings::create_builder(&logger.logger),
         }
     }
 
@@ -52,5 +77,21 @@ impl Builder {
                 network: trt_bindings::create_network(&self.builder, true),
             },
         }
+    }
+}
+
+pub struct OnnxParser {
+    parser: UniquePtr<trt_bindings::ONNXParserTRT>,
+}
+
+impl OnnxParser {
+    pub fn new(network: &NetworkDefinition, logger: &logging::Logger) -> Self {
+        OnnxParser {
+            parser: trt_bindings::create_parser(&network.network, &logger.logger),
+        }
+    }
+
+    pub fn parse(&self, onnx_model: &str, verbosity: logging::Sererity) -> bool {
+        trt_bindings::parse(&self.parser, onnx_model, verbosity as i32)
     }
 }

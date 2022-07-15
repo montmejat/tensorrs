@@ -2,5 +2,5 @@
 
 std::unique_ptr<LoggerTRT> create_logger()
 {
-    return std::unique_ptr<LoggerTRT>(new LoggerTRT());
+    return std::make_unique<LoggerTRT>();
 }
