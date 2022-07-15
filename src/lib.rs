@@ -1,4 +1,4 @@
-use cxx::{UniquePtr, SharedPtr};
+use cxx::UniquePtr;
 
 #[cxx::bridge]
 pub mod trt_bindings {
@@ -20,20 +20,35 @@ pub mod trt_bindings {
 
         type ONNXParserTRT;
         fn create_parser(
-            network: UniquePtr<NetworkDefinitionTRT>,
+            network: &UniquePtr<NetworkDefinitionTRT>,
             logger: &UniquePtr<LoggerTRT>,
         ) -> UniquePtr<ONNXParserTRT>;
+        fn parse(parser: &UniquePtr<ONNXParserTRT>, onnx_model: &str, verbosity: i32) -> bool;
     }
 }
 
-pub struct Logger {
-    logger: UniquePtr<trt_bindings::LoggerTRT>,
-}
+pub mod logging {
+    use cxx::UniquePtr;
+    use super::trt_bindings;
 
-impl Logger {
-    pub fn new() -> Self {
-        Logger {
-            logger: trt_bindings::create_logger(),
+    pub struct Logger {
+        pub logger: UniquePtr<trt_bindings::LoggerTRT>,
+    }
+
+    #[derive(Copy, Clone)]
+    pub enum Sererity {
+        InternalError = 0,
+        Error = 1,
+        Warning = 2,
+        Info = 3,
+        Verbose = 4,
+    }
+
+    impl Logger {
+        pub fn new() -> Self {
+            Logger {
+                logger: trt_bindings::create_logger(),
+            }
         }
     }
 }
@@ -47,9 +62,9 @@ pub struct NetworkDefinition {
 }
 
 impl Builder {
-    pub fn new(log: &Logger) -> Self {
+    pub fn new(logger: &logging::Logger) -> Self {
         Builder {
-            builder: trt_bindings::create_builder(&log.logger),
+            builder: trt_bindings::create_builder(&logger.logger),
         }
     }
 
@@ -65,14 +80,18 @@ impl Builder {
     }
 }
 
-pub struct ONNXParser {
+pub struct OnnxParser {
     parser: UniquePtr<trt_bindings::ONNXParserTRT>,
 }
 
-impl ONNXParser {
-    pub fn new(network: NetworkDefinition, logger: &Logger) -> Self {
-        ONNXParser {
-            parser: trt_bindings::create_parser(network.network, &logger.logger),
+impl OnnxParser {
+    pub fn new(network: &NetworkDefinition, logger: &logging::Logger) -> Self {
+        OnnxParser {
+            parser: trt_bindings::create_parser(&network.network, &logger.logger),
         }
+    }
+
+    pub fn parse(&self, onnx_model: &str, verbosity: logging::Sererity) -> bool {
+        trt_bindings::parse(&self.parser, onnx_model, verbosity as i32)
     }
 }
