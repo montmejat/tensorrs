@@ -12,11 +12,15 @@ pub mod trt_bindings {
 
         type BuilderTRT;
         type NetworkDefinitionTRT;
+        type BuilderConfigTRT;
         fn create_builder(logger: &UniquePtr<LoggerTRT>) -> UniquePtr<BuilderTRT>;
         fn create_network(
             builder: &UniquePtr<BuilderTRT>,
             explicit_batch: bool,
         ) -> UniquePtr<NetworkDefinitionTRT>;
+        fn create_builder_config(
+            builder: &UniquePtr<BuilderTRT>
+        ) -> UniquePtr<BuilderConfigTRT>;
 
         type ONNXParserTRT;
         fn create_parser(
@@ -28,8 +32,8 @@ pub mod trt_bindings {
 }
 
 pub mod logging {
-    use cxx::UniquePtr;
     use super::trt_bindings;
+    use cxx::UniquePtr;
 
     pub struct Logger {
         pub logger: UniquePtr<trt_bindings::LoggerTRT>,
@@ -61,6 +65,10 @@ pub struct NetworkDefinition {
     network: UniquePtr<trt_bindings::NetworkDefinitionTRT>,
 }
 
+pub struct BuilderConfig {
+    builder_config: UniquePtr<trt_bindings::BuilderConfigTRT>,
+}
+
 impl Builder {
     pub fn new(logger: &logging::Logger) -> Self {
         Builder {
@@ -76,6 +84,12 @@ impl Builder {
             None => NetworkDefinition {
                 network: trt_bindings::create_network(&self.builder, true),
             },
+        }
+    }
+
+    pub fn create_config(&self) -> BuilderConfig {
+        BuilderConfig {
+            builder_config: trt_bindings::create_builder_config(&self.builder),
         }
     }
 }

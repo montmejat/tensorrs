@@ -20,3 +20,9 @@ std::unique_ptr<NetworkDefinitionTRT> create_network(const std::unique_ptr<Build
     nvinfer1::INetworkDefinition *network = builder.get()->createNetworkV2(flag);
     return std::unique_ptr<NetworkDefinitionTRT>(network);
 }
+
+std::unique_ptr<BuilderConfigTRT> create_builder_config(const std::unique_ptr<BuilderTRT> &builder)
+{
+    auto config = builder.get()->createBuilderConfig();
+    return std::unique_ptr<BuilderConfigTRT>(config);
+}
