@@ -16,7 +16,7 @@ std::unique_ptr<NetworkDefinitionTRT> create_network(const std::unique_ptr<Build
         flag = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
     else
         flag = 0U;
-    
+
     nvinfer1::INetworkDefinition *network = builder.get()->createNetworkV2(flag);
     return std::unique_ptr<NetworkDefinitionTRT>(network);
 }
@@ -25,4 +25,13 @@ std::unique_ptr<BuilderConfigTRT> create_builder_config(const std::unique_ptr<Bu
 {
     auto config = builder.get()->createBuilderConfig();
     return std::unique_ptr<BuilderConfigTRT>(config);
+}
+
+std::unique_ptr<HostMemoryTRT> build_serialized_network(
+    const std::unique_ptr<BuilderTRT> &builder,
+    const std::unique_ptr<NetworkDefinitionTRT> &network,
+    const std::unique_ptr<BuilderConfigTRT> &config)
+{
+    auto serialized_network = builder.get()->buildSerializedNetwork(*network, *config);
+    return std::unique_ptr<HostMemoryTRT>(serialized_network);
 }

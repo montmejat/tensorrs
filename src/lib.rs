@@ -13,14 +13,18 @@ pub mod trt_bindings {
         type BuilderTRT;
         type NetworkDefinitionTRT;
         type BuilderConfigTRT;
+        type HostMemoryTRT;
         fn create_builder(logger: &UniquePtr<LoggerTRT>) -> UniquePtr<BuilderTRT>;
         fn create_network(
             builder: &UniquePtr<BuilderTRT>,
             explicit_batch: bool,
         ) -> UniquePtr<NetworkDefinitionTRT>;
-        fn create_builder_config(
-            builder: &UniquePtr<BuilderTRT>
-        ) -> UniquePtr<BuilderConfigTRT>;
+        fn create_builder_config(builder: &UniquePtr<BuilderTRT>) -> UniquePtr<BuilderConfigTRT>;
+        fn build_serialized_network(
+            builder: &UniquePtr<BuilderTRT>,
+            network: &UniquePtr<NetworkDefinitionTRT>,
+            config: &UniquePtr<BuilderConfigTRT>,
+        ) -> UniquePtr<HostMemoryTRT>;
 
         type ONNXParserTRT;
         fn create_parser(
@@ -69,6 +73,10 @@ pub struct BuilderConfig {
     builder_config: UniquePtr<trt_bindings::BuilderConfigTRT>,
 }
 
+pub struct HostMemory {
+    host_memory: UniquePtr<trt_bindings::HostMemoryTRT>,
+}
+
 impl Builder {
     pub fn new(logger: &logging::Logger) -> Self {
         Builder {
@@ -90,6 +98,20 @@ impl Builder {
     pub fn create_config(&self) -> BuilderConfig {
         BuilderConfig {
             builder_config: trt_bindings::create_builder_config(&self.builder),
+        }
+    }
+
+    pub fn build_serialized_network(
+        &self,
+        network: &NetworkDefinition,
+        config: &BuilderConfig,
+    ) -> HostMemory {
+        HostMemory {
+            host_memory: trt_bindings::build_serialized_network(
+                &self.builder,
+                &network.network,
+                &config.builder_config,
+            ),
         }
     }
 }

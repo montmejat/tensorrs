@@ -15,4 +15,5 @@ fn main() {
 
     // Build engine
     let builder_config = builder.create_config();
+    let engine = builder.build_serialized_network(&network, &builder_config);
 }
