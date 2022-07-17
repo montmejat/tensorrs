@@ -25,6 +25,11 @@ pub mod trt_bindings {
             network: &UniquePtr<NetworkDefinitionTRT>,
             config: &UniquePtr<BuilderConfigTRT>,
         ) -> UniquePtr<HostMemoryTRT>;
+        fn set_memory_pool_limit(
+            config: &UniquePtr<BuilderConfigTRT>,
+            memory_pool_type: i32,
+            size: u32
+        );
 
         type ONNXParserTRT;
         fn create_parser(
@@ -77,6 +82,13 @@ pub struct HostMemory {
     host_memory: UniquePtr<trt_bindings::HostMemoryTRT>,
 }
 
+pub enum MemoryPoolType {
+    Workspace = 0,
+    DlaManagedSram = 1,
+    DlaLocalDram = 2,
+    DlaGlobalDram = 3,
+}
+
 impl Builder {
     pub fn new(logger: &logging::Logger) -> Self {
         Builder {
@@ -113,6 +125,20 @@ impl Builder {
                 &config.builder_config,
             ),
         }
+    }
+}
+
+impl BuilderConfig {
+    pub fn set_memory_pool_limit(
+        &self,
+        memory_pool_type: MemoryPoolType,
+        size: u32,
+    ) {
+        trt_bindings::set_memory_pool_limit(
+            &self.builder_config,
+            memory_pool_type as i32,
+            size,
+        );
     }
 }
 
