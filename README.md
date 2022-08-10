@@ -1,3 +1,7 @@
+# Requirements
+
+Make sure you have `/path/to/tensorrt/lib` and `/path/to/cuda/lib64` in your `LD_LIBRARY_PATH` environment variable.
+
 # TensorRT bindings for Rust
 
 Use TensorRT like you already do. Here's what works for now:
