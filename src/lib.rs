@@ -8,7 +8,7 @@ pub mod trt_bindings {
         include!("tensorrs/trtbinds/include/parser.h");
 
         type LoggerTRT;
-        fn create_logger() -> UniquePtr<LoggerTRT>;
+        fn create_logger(min_verbosity: i32) -> UniquePtr<LoggerTRT>;
 
         type BuilderTRT;
         type NetworkDefinitionTRT;
@@ -58,10 +58,21 @@ pub mod logging {
     }
 
     impl Logger {
-        pub fn new() -> Self {
-            Logger {
-                logger: trt_bindings::create_logger(),
+        pub fn new(min_verbosity: Option<Sererity>) -> Self {
+            match min_verbosity {
+                Some(min_verbosity) => {
+                    Logger {
+                        logger: trt_bindings::create_logger(min_verbosity as i32),
+                    }
+                }
+                None => {
+                    Logger {
+                        logger: trt_bindings::create_logger(Sererity::Info as i32),
+                    }
+                }
             }
+
+            
         }
     }
 }
