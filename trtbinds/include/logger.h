@@ -6,6 +6,8 @@
 #include <chrono>
 #include "NvInfer.h"
 
+using RuntimeTRT = nvinfer1::IRuntime;
+
 class LoggerTRT : public nvinfer1::ILogger
 {
 private:
@@ -51,3 +53,4 @@ public:
 };
 
 std::unique_ptr<LoggerTRT> create_logger(int min_severity);
+std::unique_ptr<RuntimeTRT> create_infer_runtime(const std::unique_ptr<LoggerTRT> &logger);

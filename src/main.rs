@@ -24,8 +24,14 @@ fn main() {
     let parser = tensorrs::OnnxParser::new(&network, &logger);
     parser.parse(&onnx_model_path, tensorrs::logging::Sererity::Info);
 
-    // Build engine
+    // Build serialized model for this platform
     let builder_config = builder.create_config();
     builder_config.set_memory_pool_limit(tensorrs::MemoryPoolType::Workspace, 5_000_000);
-    let _engine = builder.build_serialized_network(&network, &builder_config);
+    
+    // This model can be saved to disk and re-used later
+    let serialized_model = builder.build_serialized_network(&network, &builder_config);
+
+    // Deserialize the plan
+    let runtime = logger.create_infer_runtime();
+    let _engine = runtime.deserialize_cuda_engine(serialized_model);
 }
