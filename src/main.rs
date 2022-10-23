@@ -28,7 +28,7 @@ fn main() {
     let builder_config = builder.create_config();
     builder_config.set_memory_pool_limit(tensorrs::MemoryPoolType::Workspace, 5_000_000);
     
-    // This model can be saved to disk and re-used later
+    // TODO: This model can be saved to disk and re-used later
     let serialized_model = builder.build_serialized_network(&network, &builder_config);
 
     // Deserialize the plan
