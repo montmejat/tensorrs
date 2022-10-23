@@ -6,9 +6,12 @@ pub mod trt_bindings {
         include!("tensorrs/trtbinds/include/builder.h");
         include!("tensorrs/trtbinds/include/logger.h");
         include!("tensorrs/trtbinds/include/parser.h");
+        include!("tensorrs/trtbinds/include/runtime.h");
 
         type LoggerTRT;
+        type RuntimeTRT;
         fn create_logger(min_verbosity: i32) -> UniquePtr<LoggerTRT>;
+        fn create_infer_runtime(logger: &UniquePtr<LoggerTRT>) -> UniquePtr<RuntimeTRT>;
 
         type BuilderTRT;
         type NetworkDefinitionTRT;
@@ -28,7 +31,7 @@ pub mod trt_bindings {
         fn set_memory_pool_limit(
             config: &UniquePtr<BuilderConfigTRT>,
             memory_pool_type: i32,
-            size: u32
+            size: u32,
         );
 
         type ONNXParserTRT;
@@ -37,10 +40,15 @@ pub mod trt_bindings {
             logger: &UniquePtr<LoggerTRT>,
         ) -> UniquePtr<ONNXParserTRT>;
         fn parse(parser: &UniquePtr<ONNXParserTRT>, onnx_model: &str, verbosity: i32) -> bool;
+
+        type CudaEngineTRT;
+        fn deserialize_cuda_engine(runtime: &UniquePtr<RuntimeTRT>, host_memory: &UniquePtr<HostMemoryTRT>) -> UniquePtr<CudaEngineTRT>;
     }
 }
 
 pub mod logging {
+    use crate::Runtime;
+
     use super::trt_bindings;
     use cxx::UniquePtr;
 
@@ -60,19 +68,19 @@ pub mod logging {
     impl Logger {
         pub fn new(min_verbosity: Option<Sererity>) -> Self {
             match min_verbosity {
-                Some(min_verbosity) => {
-                    Logger {
-                        logger: trt_bindings::create_logger(min_verbosity as i32),
-                    }
-                }
-                None => {
-                    Logger {
-                        logger: trt_bindings::create_logger(Sererity::Info as i32),
-                    }
-                }
+                Some(min_verbosity) => Logger {
+                    logger: trt_bindings::create_logger(min_verbosity as i32),
+                },
+                None => Logger {
+                    logger: trt_bindings::create_logger(Sererity::Info as i32),
+                },
             }
+        }
 
-            
+        pub fn create_infer_runtime(&self) -> Runtime {
+            Runtime {
+                runtime: trt_bindings::create_infer_runtime(&self.logger),
+            }
         }
     }
 }
@@ -140,16 +148,8 @@ impl Builder {
 }
 
 impl BuilderConfig {
-    pub fn set_memory_pool_limit(
-        &self,
-        memory_pool_type: MemoryPoolType,
-        size: u32,
-    ) {
-        trt_bindings::set_memory_pool_limit(
-            &self.builder_config,
-            memory_pool_type as i32,
-            size,
-        );
+    pub fn set_memory_pool_limit(&self, memory_pool_type: MemoryPoolType, size: u32) {
+        trt_bindings::set_memory_pool_limit(&self.builder_config, memory_pool_type as i32, size);
     }
 }
 
@@ -166,5 +166,21 @@ impl OnnxParser {
 
     pub fn parse(&self, onnx_model: &str, verbosity: logging::Sererity) -> bool {
         trt_bindings::parse(&self.parser, onnx_model, verbosity as i32)
+    }
+}
+
+pub struct Runtime {
+    runtime: UniquePtr<trt_bindings::RuntimeTRT>,
+}
+
+pub struct Engine {
+    engine: UniquePtr<trt_bindings::CudaEngineTRT>,
+}
+
+impl Runtime {
+    pub fn deserialize_cuda_engine(&self, host_memory: HostMemory) -> Engine {
+        Engine {
+            engine: trt_bindings::deserialize_cuda_engine(&self.runtime, &host_memory.host_memory),
+        }
     }
 }
