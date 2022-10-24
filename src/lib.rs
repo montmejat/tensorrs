@@ -7,6 +7,7 @@ pub mod trt_bindings {
         include!("tensorrs/trtbinds/include/logger.h");
         include!("tensorrs/trtbinds/include/parser.h");
         include!("tensorrs/trtbinds/include/runtime.h");
+        include!("tensorrs/trtbinds/include/engine.h");
 
         type LoggerTRT;
         type RuntimeTRT;
@@ -42,7 +43,15 @@ pub mod trt_bindings {
         fn parse(parser: &UniquePtr<ONNXParserTRT>, onnx_model: &str, verbosity: i32) -> bool;
 
         type CudaEngineTRT;
-        fn deserialize_cuda_engine(runtime: &UniquePtr<RuntimeTRT>, host_memory: &UniquePtr<HostMemoryTRT>) -> UniquePtr<CudaEngineTRT>;
+        fn deserialize_cuda_engine(
+            runtime: &UniquePtr<RuntimeTRT>,
+            host_memory: &UniquePtr<HostMemoryTRT>,
+        ) -> UniquePtr<CudaEngineTRT>;
+
+        type ExecutionContextTRT;
+        fn create_execution_context(
+            engine: &UniquePtr<CudaEngineTRT>,
+        ) -> UniquePtr<ExecutionContextTRT>;
     }
 }
 
@@ -181,6 +190,18 @@ impl Runtime {
     pub fn deserialize_cuda_engine(&self, host_memory: HostMemory) -> Engine {
         Engine {
             engine: trt_bindings::deserialize_cuda_engine(&self.runtime, &host_memory.host_memory),
+        }
+    }
+}
+
+pub struct ExecutionContext {
+    execution_context: UniquePtr<trt_bindings::ExecutionContextTRT>,
+}
+
+impl Engine {
+    pub fn create_execution_context(&self) -> ExecutionContext {
+        ExecutionContext {
+            execution_context: trt_bindings::create_execution_context(&self.engine),
         }
     }
 }

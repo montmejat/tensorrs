@@ -49,6 +49,7 @@ fn main() {
         .file("trtbinds/src/builder.cc")
         .file("trtbinds/src/parser.cc")
         .file("trtbinds/src/runtime.cc")
+        .file("trtbinds/src/engine.cc")
         .flag_if_supported(format!(
             "-I{}", tensorrt_include_dir.expect("TensorRT hasn't been found. 
                     Make sure '/path/to/tensorrt/lib' is included in LD_LIBRARY_PATH.")).as_str())
